@@ -1,13 +1,11 @@
-// --- file: frontend/src/api.ts ---
 import axios from 'axios';
 
-// In production, use the same origin for API calls
-const base = import.meta.env.PROD
-  ? window.location.origin
-  : (import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:4000');
-
 const api = axios.create({
-  baseURL: `${base}/api`,
+  baseURL: 'https://aram-gamifier-production.up.railway.app',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });
 
 export default api;
