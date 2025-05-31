@@ -6,11 +6,11 @@ import SnowBackground from './components/SnowBackground';
 import Landing from './pages/Landing';
 import Session from './pages/Session';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import PasswordProtection from './components/PasswordProtection';
+
 
 export default function App() {
   return (
-    <PasswordProtection>
+    <>
       <BackgroundMusic />
       <SnowBackground />
 
@@ -51,6 +51,6 @@ export default function App() {
           </Routes>
         </BrowserRouter>
       </div>
-    </PasswordProtection>
+    </>
   );
 }
