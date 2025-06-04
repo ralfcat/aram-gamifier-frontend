@@ -208,8 +208,12 @@ export default function Session() {
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
 
-  /* ── fetch match history on mount ────────────────────────────────────── */
-  useEffect(() => { fetchMatchHistory(); }, [fetchMatchHistory]);
+  /* ── fetch match history only when session start is known ────────────── */
+  useEffect(() => {
+    if (sessionStartAt) {
+      fetchMatchHistory();
+    }
+  }, [fetchMatchHistory, sessionStartAt]);
 
   /* ── Loading screen ─────────────────────────────────────────────────── */
   if (loading) {
