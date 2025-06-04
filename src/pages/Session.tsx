@@ -58,7 +58,7 @@ export default function Session() {
   /* ── UI: modals ─────────────────────────────────────────────────────── */
   const [betOpen,    setBetOpen]    = useState(false);
   const [editingBet, setEditingBet] = useState<Bet | null>(null);
-  const [activeTab,  setActiveTab]  = useState<'betting' | 'analytics'>('betting');
+  const [activeTab,  setActiveTab]  = useState<'betting' | 'analytics' | 'history'>('betting');
   const bettorId = localStorage.getItem('playerId')!;
 
   /* ── Odds & stats cache ─────────────────────────────────────────────── */
@@ -67,12 +67,23 @@ export default function Session() {
     stats: Record<string, { history: any[]; averages: any }>;
   } | null>(null);
 
+  /* helper to pull match history */
+  const fetchMatchHistory = useCallback(async () => {
+    if (!id) return;
+    try {
+      const response = await api.get(`/bets/${id}/history`);
+      setMatchHistory(response.data);
+    } catch (error) {
+      console.error('Failed to fetch match history:', error);
+      toast.error('Failed to load match history');
+    }
+  }, [id]);
+
   /* helper to pull odds+stats */
   const fetchOddsData = useCallback(async () => {
     if (!id) return;
     try {
       const res = await api.get(`/odds/${id}`);
-      console.log('Received odds data:', res.data);  // Debug log
       setOddsData(res.data);
     } catch (e) {
       console.error('Failed to load odds+stats:', e);
@@ -120,7 +131,11 @@ export default function Session() {
     socket.on('SESSION_DELETED', () => navigate('/'));
     socket.on('SESSION_STARTED', () => { setSessionStarted(true); toast.success('Session has started!'); });
     socket.on('GAME_STARTED', () => { setActiveGame(true); toast.success('Game in progress - betting paused'); });
-    socket.on('GAME_ENDED', () => { setActiveGame(false); toast.success('Game ended - betting resumed'); });
+    socket.on('GAME_ENDED', () => {
+      setActiveGame(false);
+      toast.success('Game ended - betting resumed');
+      fetchMatchHistory();
+    });
 
     socket.on('ODDS_READY', fetchOddsData);
     socket.on('BET_PLACED', refreshBets);
@@ -148,22 +163,8 @@ export default function Session() {
     });
   };
 
-  /* ── Add new effect to fetch match history ────────────────────────────── */
-  useEffect(() => {
-    if (!id) return;
-
-    const fetchMatchHistory = async () => {
-      try {
-        const response = await api.get(`/bets/${id}/history`);
-        setMatchHistory(response.data);
-      } catch (error) {
-        console.error('Failed to fetch match history:', error);
-        toast.error('Failed to load match history');
-      }
-    };
-
-    fetchMatchHistory();
-  }, [id]);
+  /* ── fetch match history on mount ────────────────────────────────────── */
+  useEffect(() => { fetchMatchHistory(); }, [fetchMatchHistory]);
 
   /* ── Loading screen ─────────────────────────────────────────────────── */
   if (loading) {
@@ -246,6 +247,16 @@ export default function Session() {
               >
                 📊 Player Analytics
               </button>
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`px-6 py-2 rounded-lg transition-all ${
+                  activeTab === 'history'
+                    ? 'bg-neon-silver/30 text-neon-silver border border-neon-silver/50'
+                    : 'bg-white/5 text-slate-300 hover:bg-white/10'
+                }`}
+              >
+                ⏲ Match History
+              </button>
             </div>
 
             {/* Tab Content */}
@@ -257,17 +268,25 @@ export default function Session() {
                 sessionStarted={activeGame}
                 onPlaceBet={() => setBetOpen(true)}
               />
-            ) : (
+            ) : activeTab === 'analytics' ? (
               selectedPlayer ? (
-              <PlayerAnalytics
-                playerId={selectedPlayer}
-                stats={oddsData?.stats[selectedPlayer]}
-              />
-            ) : (
+                <PlayerAnalytics
+                  playerId={selectedPlayer}
+                  stats={oddsData?.stats[selectedPlayer]}
+                />
+              ) : (
                 <div className="flex flex-col items-center justify-center h-full text-slate-300">
                   <p className="text-lg mb-2">👈 Select a player to view their analytics</p>
                   <p className="text-sm opacity-75">Click on any player card from the left panel</p>
-              </div>
+                </div>
+              )
+            ) : (
+              matchHistory ? (
+                <MatchHistory matches={matchHistory.matches} bets={matchHistory.bets} />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-slate-300">
+                  <p>No match history yet.</p>
+                </div>
               )
             )}
           </div>
@@ -310,3 +329,4 @@ export default function Session() {
     </div>
   );
 }
+
