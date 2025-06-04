@@ -38,7 +38,6 @@ export default function BetModal({
 
   /* helper: real odds or fallback */
   const lookupOdds = (cat: string, pid: string) => {
-    console.log('Looking up odds for', { cat, pid, odds });  // Debug log
     if (!odds || !odds[cat]) {
       console.warn('No odds data for category:', cat);
       return players.length;
@@ -52,7 +51,6 @@ export default function BetModal({
   };
 
   const displayedOdds = lookupOdds(category, playerId);
-  console.log('Displayed odds:', displayedOdds);  // Debug log
 
   /*──────────── submit ───────────*/
   const submitBet = async () => {
@@ -167,3 +165,4 @@ export default function BetModal({
     </motion.div>
   );
 }
+

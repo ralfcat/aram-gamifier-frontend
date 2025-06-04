@@ -133,3 +133,4 @@ export default function MatchHistory({ matches, bets }: Props) {
     </div>
   );
 } 
+
