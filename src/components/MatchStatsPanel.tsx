@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw, Trophy, Target, Skull, Shield } from 'lucide-react';
+import { RefreshCw, Trophy, Target, Skull, Shield, Droplet, Flame, Eye } from 'lucide-react';
 
 interface MatchStats {
   playerId: string;
@@ -49,6 +49,16 @@ const getCategoryIcon = (category: string) => {
       return <Shield className="w-4 h-4" />;
     case 'fewest_deaths':
       return <Skull className="w-4 h-4" />;
+    case 'most_deaths':
+      return <Skull className="w-4 h-4" />;
+    case 'fewest_kills':
+      return <Target className="w-4 h-4" />;
+    case 'first_blood':
+      return <Droplet className="w-4 h-4" />;
+    case 'most_damage_taken':
+      return <Flame className="w-4 h-4" />;
+    case 'highest_vision':
+      return <Eye className="w-4 h-4" />;
     default:
       return null;
   }

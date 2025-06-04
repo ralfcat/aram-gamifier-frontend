@@ -164,6 +164,9 @@ export default function Session() {
 
     socket.on('ODDS_READY', fetchOddsData);
     socket.on('BET_PLACED', refreshBets);
+    socket.on('PLAYER_BALANCE_UPDATED', ({ playerId, balance }) => {
+      setPlayers(ps => ps.map(p => p.id === playerId ? { ...p, balance } : p));
+    });
 
     return () => {
       socket.off('PLAYER_JOINED');
@@ -174,6 +177,7 @@ export default function Session() {
       socket.off('GAME_ENDED');
       socket.off('ODDS_READY');
       socket.off('BET_PLACED');
+      socket.off('PLAYER_BALANCE_UPDATED');
     };
   }, [id, navigate, paused, fetchOddsData]);
 
@@ -204,8 +208,12 @@ export default function Session() {
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
 
-  /* ── fetch match history on mount ────────────────────────────────────── */
-  useEffect(() => { fetchMatchHistory(); }, [fetchMatchHistory]);
+  /* ── fetch match history only when session start is known ────────────── */
+  useEffect(() => {
+    if (sessionStartAt) {
+      fetchMatchHistory();
+    }
+  }, [fetchMatchHistory, sessionStartAt]);
 
   /* ── Loading screen ─────────────────────────────────────────────────── */
   if (loading) {
