@@ -49,6 +49,10 @@ const getCategoryIcon = (category: string) => {
       return <Shield className="w-4 h-4" />;
     case 'fewest_deaths':
       return <Skull className="w-4 h-4" />;
+    case 'most_deaths':
+      return <Skull className="w-4 h-4" />;
+    case 'fewest_kills':
+      return <Target className="w-4 h-4" />;
     default:
       return null;
   }

@@ -32,6 +32,9 @@ const categories = [
   { value: 'fewestDeaths', label: 'Fewest Deaths' },
   { value: 'mostAssists',  label: 'Most Assists'  },
   { value: 'mostDamage',   label: 'Most Damage'   },
+  // extra betting categories
+  { value: 'mostDeaths',   label: 'Most Deaths'   },
+  { value: 'fewestKills',  label: 'Fewest Kills'  },
 ];
 
 /* ── component ─────────────────────────────────────── */
