@@ -9,7 +9,6 @@ interface Props {
   sessionName: string;
   isCreator: boolean;
   paused: boolean;
-  sessionStarted: boolean;
   activeGame: boolean;
   onPauseToggle: () => void;
 }
@@ -19,9 +18,8 @@ export default function SessionHeader({
   sessionName, 
   isCreator, 
   paused, 
-  sessionStarted, 
   activeGame,
-  onPauseToggle 
+  onPauseToggle
 }: Props) {
   const navigate = useNavigate();
 
@@ -30,15 +28,6 @@ export default function SessionHeader({
     toast.success(`Invite code copied: ${sessionName}`);
   };
 
-  const startSession = async () => {
-    try {
-      await api.post(`/sessions/${sessionId}/start`);
-      toast.success('Session started!');
-    } catch (err: any) {
-      const msg = err.response?.data?.error ?? err.message;
-      toast.error(`Error starting session: ${msg}`);
-    }
-  };
 
   const refreshNow = async () => {
     try {
@@ -75,15 +64,6 @@ export default function SessionHeader({
       </div>
 
       <div className="flex gap-4">
-        {!activeGame && (
-          <button 
-            onClick={startSession} 
-            className="btn btn-sm btn-glow border-2 border-neon-green text-neon-green hover:bg-neon-green/20 hover:shadow-lg hover:shadow-neon-green/50"
-          >
-            🚀 Start Session
-          </button>
-        )}
-
         {isCreator && (
           <button 
             onClick={endSession} 
