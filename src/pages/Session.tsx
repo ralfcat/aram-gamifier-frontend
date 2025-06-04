@@ -109,6 +109,14 @@ export default function Session() {
         setIsCreator(s.data.createdBy === localStorage.getItem('summoner'));
         setSessionStarted(!!s.data.startedAt);
         setActiveGame(!!s.data.activeGame);
+        if (!s.data.startedAt) {
+          try {
+            await api.post(`/sessions/${id}/start`);
+            setSessionStarted(true);
+          } catch (e) {
+            console.error('Failed to start session automatically:', e);
+          }
+        }
       } catch {
         toast.error('Session not found'); navigate('/'); return;
       } finally { setLoading(false); }
@@ -219,7 +227,6 @@ export default function Session() {
             sessionName={sessionName}
             isCreator={isCreator}
             paused={paused}
-            sessionStarted={sessionStarted}
             activeGame={activeGame}
             onPauseToggle={() => setPaused(p => !p)}
           />
