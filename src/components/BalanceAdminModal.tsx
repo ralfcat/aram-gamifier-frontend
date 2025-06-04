@@ -23,7 +23,7 @@ export default function BalanceAdminModal({ sessionId, players, onClose, onUpdat
   const adjust = async (delta: number) => {
     if (!playerId || amount <= 0) return;
     try {
-      await api.post(`/admin/sessions/${sessionId}/currency`, { playerId, amount: delta });
+      await api.post(`/sessions/${sessionId}/currency`, { playerId, amount: delta });
       toast.success('Balance updated');
       onUpdated();
       onClose();
