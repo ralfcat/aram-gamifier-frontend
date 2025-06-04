@@ -11,8 +11,9 @@ import BetModal          from '../components/BetModal';
 import BetsList          from '../components/BetsList';
 import EditBetModal      from '../components/EditBetModal';
 import PlayerCard        from '../components/PlayerCard';
-import MatchHistory     from '../components/MatchHistory';
+import MatchHistory      from '../components/MatchHistory';
 import BettingPanel      from '../components/BettingPanel';
+import BalanceAdminModal from '../components/BalanceAdminModal';
 
 /*───────────────────────────────────────────────────────────────────────────*/
 /*  Local types                                                             */
@@ -48,6 +49,7 @@ export default function Session() {
   const [bets,           setBets]           = useState<Bet[]>([]);
   const [sessionName,    setSessionName]    = useState('');
   const [sessionStarted, setSessionStarted] = useState(false);
+  const [sessionStartAt, setSessionStartAt] = useState<string | null>(null);
   const [activeGame,     setActiveGame]     = useState(false);
   const [paused,         setPaused]         = useState(false);
   const [isCreator,      setIsCreator]      = useState(false);
@@ -59,6 +61,8 @@ export default function Session() {
   const [betOpen,    setBetOpen]    = useState(false);
   const [editingBet, setEditingBet] = useState<Bet | null>(null);
   const [activeTab,  setActiveTab]  = useState<'betting' | 'analytics' | 'history'>('betting');
+  const [showBalanceAdmin, setShowBalanceAdmin] = useState(false);
+  const [adminKeyCombo, setAdminKeyCombo] = useState('');
   const bettorId = localStorage.getItem('playerId')!;
 
   /* ── Odds & stats cache ─────────────────────────────────────────────── */
@@ -72,12 +76,23 @@ export default function Session() {
     if (!id) return;
     try {
       const response = await api.get(`/bets/${id}/history`);
-      setMatchHistory(response.data);
+      const data = response.data as { matches: Record<string, any[]>; bets: Bet[] };
+      if (sessionStartAt) {
+        const cutoff = new Date(sessionStartAt).getTime();
+        data.matches = Object.fromEntries(
+          Object.entries(data.matches).filter(([, stats]) =>
+            new Date(stats[0].timestamp).getTime() >= cutoff
+          )
+        );
+        const validIds = new Set(Object.keys(data.matches));
+        data.bets = data.bets.filter(b => b.matchId && validIds.has(b.matchId));
+      }
+      setMatchHistory(data);
     } catch (error) {
       console.error('Failed to fetch match history:', error);
       toast.error('Failed to load match history');
     }
-  }, [id]);
+  }, [id, sessionStartAt]);
 
   /* helper to pull odds+stats */
   const fetchOddsData = useCallback(async () => {
@@ -108,11 +123,13 @@ export default function Session() {
         setSessionName(s.data.name);
         setIsCreator(s.data.createdBy === localStorage.getItem('summoner'));
         setSessionStarted(!!s.data.startedAt);
+        setSessionStartAt(s.data.startedAt);
         setActiveGame(!!s.data.activeGame);
         if (!s.data.startedAt) {
           try {
-            await api.post(`/sessions/${id}/start`);
+            const res = await api.post(`/sessions/${id}/start`);
             setSessionStarted(true);
+            setSessionStartAt(res.data.startedAt ?? new Date().toISOString());
           } catch (e) {
             console.error('Failed to start session automatically:', e);
           }
@@ -170,6 +187,22 @@ export default function Session() {
       }
     });
   };
+
+  /* ── admin key combo ──────────────────────────────────────────────── */
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      setAdminKeyCombo(prev => {
+        const combo = (prev + e.key).slice(-5);
+        if (combo === 'admin') {
+          setShowBalanceAdmin(true);
+          return '';
+        }
+        return combo;
+      });
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
 
   /* ── fetch match history on mount ────────────────────────────────────── */
   useEffect(() => { fetchMatchHistory(); }, [fetchMatchHistory]);
@@ -330,6 +363,18 @@ export default function Session() {
           onBetUpdated={() => {
             api.get<Bet[]>(`/bets/${id}`).then(r => setBets(r.data));
             fetchOddsData();
+          }}
+        />
+      )}
+
+      {showBalanceAdmin && (
+        <BalanceAdminModal
+          sessionId={id!}
+          players={players}
+          onClose={() => setShowBalanceAdmin(false)}
+          onUpdated={async () => {
+            const res = await api.get<Player[]>(`/players/${id}`);
+            setPlayers(res.data);
           }}
         />
       )}
