@@ -1,7 +1,7 @@
 // --- file: frontend/src/pages/Session.tsx ---
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { socket } from '../socket';
+import socket from '../services/socket';
 import api from '../api';
 import { toast } from 'react-hot-toast';
 
